@@ -61,7 +61,8 @@ studentNames <- c("Gina", "Fafa", "Sloane", "Meg", "Maddy") #made a vector of st
 #this is a character vector
 testScores <- c(87, 91, 90, 88, 95) #made a vector of test scores. 
 #this is a numerical vector
-scholarship <- c(FALSE, TRUE, TRUE, FALSE, FALSE) #made a vector showing whether they are on scholarship or not. 
+scholarship <- c(FALSE, TRUE, TRUE, FALSE, FALSE) 
+#made a vector showing whether they are on scholarship or not. 
 #this is a logical vector
 
 dataframe2 <- data.frame(studentNames, testScores, scholarship)
