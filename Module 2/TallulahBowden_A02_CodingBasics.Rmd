@@ -57,13 +57,18 @@ mean > median #ask if the mean is greater than the median
 8.  Label the columns of your data frame with informative titles.
 
 ```{r basics 2}
+studentNames <- c("Gina", "Fafa", "Sloane", "Meg", "Maddy") #made a vector of student names. this is a character vector
+testScores <- c(87, 91, 90, 88, 95) #made a vector of test scores. this is a numerical vector
+scholarship <- c(FALSE, TRUE, TRUE, FALSE, FALSE) #made a vector showing whether they are on scholarship or not. this is a logical vector
 
-
+dataframe2 <- data.frame(studentNames, testScores, scholarship)
+names(dataframe2) <- c("Student Name", "Test Score", "Scholarship Status")
+dataframe2
 ```
 
 9.  QUESTION: How is this data frame different from a matrix?
 
-> Answer:
+> Answer: Data frames are different from matrices as they can have different modes. Matrices have to have elements of the same type. In this data frame, there are elements that are numeric, characters, and logical. A matrix could only contain one of these types.
 
 10. Create a function with one input. In this function, use `if`...`else` to evaluate the value of the input: if it is greater than 50, print the word "Pass"; otherwise print the word "Fail". 
 
@@ -75,21 +80,34 @@ mean > median #ask if the mean is greater than the median
 
 ```{r basics 3}
 #10. Create a function using if...else
+passOrFail <- function(x) {
+  if (x > 50) {
+    "Pass"
+  }
+  else {
+    "Fail"
+  }
+}
+
 
 #11. Create a function using ifelse()
+passOrFail2 <- function(x) {
+  ifelse(x > 50, "Pass", "Fail")
+}
 
 #12a. Run the first function with the value 52.5
-
+passOrFail(52.5)
 #12b. Run the second function with the value 52.5
-
+passOrFail2(52.5)
 #13a. Run the first function with the vector of test scores
-
+#passOrFail(testScores)
 #13b. Run the second function with the vector of test scores
+passOrFail2(testScores)
 ```
 
 14. QUESTION: Which option of `if`...`else` vs. `ifelse` worked? Why? (Hint: search the web for "R vectorization")
 
-> Answer:
+> Answer: The ifelse option worked when using the test score vector. The standard if statement is not vectorized. This means that the if statement will only work with one conditional (logic clause). When a vector is used, there are the same number of conditionals as there are items in the vector. This gives us an error. The ifelse option is vectorized which means that it is repeated as many times as needed to end the loop. It will repeat until all items in the vector have been assessed. 
 
 
 **NOTE** Before knitting, you'll need to comment out the call to the function in Q13 that does not work. (A document can't knit if the code it contains causes an error!)
