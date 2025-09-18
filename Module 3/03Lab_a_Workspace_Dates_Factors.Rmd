@@ -3,6 +3,8 @@ title: "Lab 3b - Workspaces, Dates, and Factors"
 author: "Environmental Data Analytics | John Fay and Luana Lima "
 date: "Fall 2025"
 output: pdf_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## Objectives
@@ -79,10 +81,21 @@ print(filenames)
 ```{r here in action}
 
 # 1. Read the 'NTL-LTER_Lake_ChemistryPhysics_Raw.csv' into a dataframe
+NTL_data <- read.csv (
+  file = here('Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv'),
+  stringsAsFactors = T
+)
+class(NTL_data)
 
 
 # 2.
 library(tidyverse);library(here)
+fileFolder <- here('Data/Raw/')
+files <- dir(fileFolder, pattern = "EPAair_O3*.*", full.names = T)
+files
+EPA_data <- files %>%
+  map(read.csv) %>%
+  bind_rows()
 
 ```
 
@@ -103,9 +116,9 @@ Remember formatting of dates in R:
 # (code must be uncommented)
 today <- Sys.Date()
 format(today, format = "%B")
-#format(today, format = "")
-#format(today, format = "")
-#format(today, format = "")
+format(today, format = "%a %b %y")
+format(today, format = "%A %B %Y")
+format(today, format = "%d/%m/%Y")
 
 ```
 
@@ -116,7 +129,7 @@ Install and load the package lubridate into your R session. Lubridate offers fas
 More info on lubridate [here][<https://cran.r-project.org/web/packages/lubridate/lubridate.pdf>].
 
 ```{r DateExercise1}
-#install.packages("lubridate")
+install.packages("lubridate")
 library(lubridate)
 
 #Ex1
@@ -133,8 +146,8 @@ date_obj_today
 
 #Ex_3 - on your own...
 str_juneteenth <- "19 June 1865"
-#date_juneteenth <- ()
-#date_juneteenth
+date_juneteenth <- dmy(str_juneteenth)
+date_juneteenth
 ```
 ### The century issue
 
