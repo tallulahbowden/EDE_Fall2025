@@ -350,10 +350,24 @@ usgs_flow_data$datetime = mdy(usgs_flow_data$datetime)
 usgs_flow_data$month <- month(usgs_flow_data$datetime)
 
 #Convert to a factor, with labels and levels
-
+usgs_flow_data$month <- factor(usgs_flow_data$month)
+levels(usgs_flow_data$month) <- c(1:12)
+levels(usgs_flow_data$month)
 
 #Plot
+ggplot(usgs_flow_data,aes(x=month)) +
+  geom_bar() + 
+  scale_x_discrete(drop=FALSE)
+summary(usgs_flow_data$month)
 
+usgs_flow_data$month <- factor(
+  usgs_flow_data$month, 
+  levels=c(1:12),
+  labels=c(month.name))
+levels(usgs_flow_data$month)
 
+ggplot(usgs_flow_data,aes(x=month)) +
+  geom_bar() + 
+  scale_x_discrete(drop=FALSE)
 ```
 
