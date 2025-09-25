@@ -107,13 +107,17 @@ class(EPAair.PM25.2019$Date)
 #4
 #create new dataframes with the selected columns
 EPAair.O3.2018.selected <- select(
-  EPAair.O3.2018, Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
+  EPAair.O3.2018, Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, 
+  COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
 EPAair.O3.2019.selected <- select(
-  EPAair.O3.2019, Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
+  EPAair.O3.2019, Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, 
+  COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
 EPAair.PM25.2018.selected <- select(
-  EPAair.PM25.2018, Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
+  EPAair.PM25.2018, Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, 
+  COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
 EPAair.PM25.2019.selected <- select(
-  EPAair.PM25.2019, Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
+  EPAair.PM25.2019, Date, DAILY_AQI_VALUE, Site.Name, AQS_PARAMETER_DESC, 
+  COUNTY, SITE_LATITUDE, SITE_LONGITUDE)
 
 #5
 #change the AQS_Parameter_Desc column to only say "PM2.5" in each cell for PM25 dataframes
@@ -170,7 +174,8 @@ colnames(EPAair.PM25.2018.selected)
 colnames(EPAair.PM25.2019.selected)
 
 #bind all four together using rbind
-EPAair <- rbind(EPAair.O3.2018.selected, EPAair.O3.2019.selected, EPAair.PM25.2018.selected, EPAair.PM25.2019.selected)
+EPAair <- rbind(EPAair.O3.2018.selected, EPAair.O3.2019.selected, 
+                EPAair.PM25.2018.selected, EPAair.PM25.2019.selected)
 
 #8 
 #wrangle the data
