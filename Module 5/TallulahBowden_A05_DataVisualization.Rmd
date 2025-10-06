@@ -36,7 +36,7 @@ This exercise accompanies the lessons in Environmental Data Analytics on Data Vi
 library(tidyverse)
 library(here)
 library(cowplot)
-library(ggplot)
+library(ggplot2)
 
 #check WD
 #getwd()
@@ -90,6 +90,7 @@ my_theme <- theme_base()  +
     legend.position = "right",
     complete = T)
     
+theme_set(my_theme)
 ```
 
 ## Create graphs
@@ -111,8 +112,7 @@ ggplot(
   labs(x = expression("PO" [4])) +
   labs(color = "Lake Name")+
   labs(y = "Total Phosphorus")+
-  labs(title = "Total Phosphorus by Phosphate for each Lake") +
-  my_theme
+  labs(title = "Total Phosphorus by Phosphate for each Lake")
 
 phosphorus_phosphate
 ```
@@ -128,60 +128,70 @@ Tips:
 
 ```{r Create boxplots}
 #5 
-temp_plot <- Peter_Paul %>%
+Peter_Paul_month <- 
+  mutate(Peter_Paul,
+    month_num = month(sampledate), 
+    month_name_abb = month(sampledate, label = TRUE), 
+    month_name_full = month(sampledate, label = TRUE, abbr = FALSE)
+  )
+
+temp_plot <- Peter_Paul_month %>%
   ggplot(
     mapping = 
-      aes(x = as.factor(month),
+      aes(x = month_name_abb,
           y = temperature_C,
           color = lakename))+
   geom_boxplot()+
   labs(x = "Month") +
 labs(y = "Temperature (C)") +
 labs(color = "Lake Name") +
-  scale_x_discrete(
-    labels = month.abb)+
   theme(legend.position = "top",
         axis.title.x = element_blank(),
-        legend.key.size = unit(0.5, "lines"))
+        legend.key.size = unit(0.5, "lines"),
+        legend.title = element_text(size = 10),
+        legend.title.position = "top",
+        axis.title.y = element_text(angle = 90,
+                                    margin =
+                                      margin(r = 15)))
   
   
   
-temp_plot
+#temp_plot
 
-TP_plot <- Peter_Paul %>%
+TP_plot <- Peter_Paul_month %>%
   ggplot(
     mapping = 
-      aes(x = as.factor(month),
+      aes(x = month_name_abb,
           y = tp_ug,
           color = lakename))+
   geom_boxplot()+
   labs(x = "Month")+
   labs(y = "Total Phosphorus")+
   labs(color = "Lake Name")+
-  scale_x_discrete(
-    labels = month.abb)+
   theme(axis.title.x = element_blank(),
-        legend.position = "none")
+        legend.position = "none",
+        axis.title.y = element_text(angle = 90,
+                                    margin =
+                                      margin(r = 15)))
 
-TP_plot
+#TP_plot
       
-TN_plot <- Peter_Paul %>%
+TN_plot <- Peter_Paul_month %>%
   ggplot(
     mapping = 
-      aes(x = as.factor(month),
+      aes(x = month_name_abb,
           y = tn_ug,
           color = lakename))+
   geom_boxplot()+
-  xlim("2", "6")+
   labs(x = "Month")+
   labs(y = "Total Nitrogen")+
   labs(color = "Lake Name")+
-  scale_x_discrete(
-    labels = month.abb)+
   theme(legend.position = "none",
-        )
+        axis.title.y = element_text(angle = 90,
+                                    margin =
+                                      margin(r = 15)))
 
-TN_plot
+#TN_plot
 
 plot_grid(
   temp_plot, 
