@@ -3,7 +3,12 @@ title: 'A06 - Crafting Reports'
 author: "Tallulah Bowden" 
 date: "Fall 2025"
 output: pdf_document
+editor_options: 
+  chunk_output_type: console
+toc: true
 ---
+
+\listoffigures
 
 ## Objectives:
 
@@ -21,6 +26,20 @@ output: pdf_document
 6.  When you have completed the assignment, **Knit** the text and code into a single PDF file.
 7.  **Be sure that you also commit and push your final Rmd document to your GitHub account**.
 
+```{r setup, warning = F, include = F, echo = F}
+#Load packages
+library(tidyverse);library(here);library(lubridate)
+
+#Load data
+epa <- read.csv(
+  here("Processed/EPAair_O3_PM25_NC1819_Processed.csv"),
+  stringsAsFactors = TRUE)
+
+#Fix dates
+epa$Date = ymd(epa$Date)
+```
+
+
 ## Task 1 - Basic Markdown
 
 Using markdown, create a 2-column table beneath the `Table: EPA Air Quality` line below that summarizes the metadata of the EPA Air Quality data.
@@ -31,15 +50,20 @@ Using markdown, create a 2-column table beneath the `Table: EPA Air Quality` lin
 
 - The first column should be aligned to the right and the second to the left.
 
-Table: EPA Air Quality
+Table 1: EPA Air Quality
 
+Item   |   Value
+---------:   |   :----------
+Filename    |   EPAair_03_PM25_NC1819_Processed.csv
+Date    |   2018-2019
+Source    |   EPA Air Quality System (AQS)
 
 
 ## Task 2 - Import packages and data, suppressing messages
 
 Set the following R code chunk so that it runs when knit, but no messages, errors, or any output is shown. The code itself, however, should be displayed.
 
-```{r project.setup}
+```{r project.setup, message=FALSE, warning=FALSE, echo=T}
 #Import libraries
 library(tidyverse)
 library(lubridate)
@@ -48,7 +72,7 @@ library(knitr)
 
 #Import EPA data (from the processed_KEY folder) & fix dates
 epa_data <- read.csv(
-  here("Data","Processed_KEY","EPAair_O3_PM25_NC1819_Processed.csv"),
+  here("Data/Processed_KEY/EPAair_O3_PM25_NC1819_Processed.csv"),
   stringsAsFactors = TRUE) %>% 
   mutate(Date = ymd(Date))
 ```
@@ -72,7 +96,7 @@ Customize the chunk options such that the code is run but is not displayed in th
 > -   If your output table spans across two pages, try inserting a page break in the markdown just before your code chunk.
 
 
-```{r data.summary}
+```{r data.summary, echo = F, message = F, warning = F}
 #Compute mean PM2.5 concentration for each county, sorted by value
 summary_PM25 <- epa_data %>% 
   drop_na(PM2.5) %>% 
@@ -89,6 +113,16 @@ summary_Ozone <- epa_data %>%
   arrange(mean_Ozone)
 
 #Use the `kable` function to produce the 2 tables in markdown format
+knitr::kable(summary_Ozone, 
+             caption = "Mean Ozone",
+             col.names = c("County", "$\\mu g/m^3$"),
+             digits = 2)
+
+knitr::kable(summary_PM25,
+             caption = "Mean Particulates (2.5mm)",
+             col.names = c("County", "$\\mu g/m^3$"),
+             digits = 2)
+
 
 ```
 
@@ -97,6 +131,37 @@ summary_Ozone <- epa_data %>%
 ## Task 4: Plots
 
 Below this paragraph, but above the horizonal line (`---`), create two separate code chunks that create boxplots of the distribution of Ozone levels by month using, one for only records collected in 2018 and one for records in 2019. Customize the chunk options such that the final figures are displayed but not the code used to generate the figures. In addition, align the plots on the left side of the page and set the figure heights so both plots fit on the same page with minimal space remaining. Lastly, add a `fig.cap` chunk option to add a caption (title) to your plot that will display underneath the figure.
+
+```{r, ozone boxplot 2018, echo = F, message = F, warning= F, fig.align='left', fig.cap = "Monthly ozone concentrations from 2018", fig.dim = c(8,4)}
+ozone_2018 <- epa_data %>%
+  filter(Year == 2018) %>%
+  mutate(month.name.abb = month(Date, label = T)) %>%
+  ggplot(mapping = 
+           aes(x = month.name.abb,
+               y = Ozone))+
+  geom_boxplot()+
+  labs(x = "Month")+
+  labs(y = expression("Concentration (" *mu*"g/m"^3* ")"))+
+  labs(title = "Monthly Ozone Concentrations (2018)")
+
+ozone_2018
+```
+
+
+```{r, ozone boxplot 2019, echo = F, message = F, warning = F, fig.align='left', fig.cap = "Monthly ozone concentrations from 2019", fig.dim = c(8,4)}
+ozone_2019 <- epa_data %>%
+  filter(Year == 2019) %>%
+  mutate(month.name.abb = month(Date, label = T)) %>%
+  ggplot(mapping = 
+           aes(x = month.name.abb,
+               y = Ozone))+
+  geom_boxplot()+
+  labs(x = "Month")+
+  labs(y = expression("Concentration (" *mu*"g/m"^3* ")"))+
+  labs(title = "Monthly Ozone Concentrations (2019)")
+
+ozone_2019
+```
 
 
 ---
@@ -108,3 +173,6 @@ Below this paragraph, but above the horizonal line (`---`), create two separate 
 Add a table of contents and list of figures to your document and knit to a PDF. Submit your PDF to Sakai, but also be sure to commit and push your Rmd file used to create this knit document to GitHub. In the section below, add a link to your GitHub repository. **Lastly, add the statement that you did not use AI in the completion of this assignment followed by your name and the date.** 
 
 ## Git Repository
+You can find my GitHub Repository at this [link](https://github.com/tallulahbowden/EDE_Fall2025).
+I did not use AI in the completion of this assignment.
+Tallulah Bowden, 10/18/2025
