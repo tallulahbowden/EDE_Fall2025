@@ -83,14 +83,26 @@ BR_complete <- inner_join(Rainfall_BR_processed,Temp_BR_processed)
 ```{r}
 
 #Exercise 5: Check if there is any missing data for both temperature and rainfall series.
+Months <- as.data.frame(seq.Date(from=as.Date("1901/01/01"),
+                                 to=as.Date("2016/12/01"),
+                                 by="month"))
+colnames(Months) <- "Date"
+BR_complete <- left_join(Months,BR_complete)
 
-
+summary(BR_complete)
 
 
 #Exercise 6: Plot both series over time on separate plots. Add a trend line using geom_smooth(). Can you say something about the trend just by visualizing the data?
+ggplot(BR_complete, aes(x = Date, y = Rainfall))+
+  geom_line()+
+  geom_smooth(method=lm)+
+  labs(title = "Rainfall in Brazil Over Time")
 
-
-
+ggplot(BR_complete, aes(x = Date, y = Temperature_C))+
+  geom_line()+
+  geom_smooth(method=lm)+
+  labs(title = "Temperature (C) in Brazil Over Time")+
+  labs(y = "Temperature (C)")
 
 
 
@@ -100,7 +112,16 @@ BR_complete <- inner_join(Rainfall_BR_processed,Temp_BR_processed)
 
 ```{r}
 #Exercise 7: Create a time series objects for each series using ts(). Make sure you specify the starting point and frequency.
+f_month <- month(first(BR_complete$Date))
+f_year <- year(first(BR_complete$Date))
 
+BR_rainfall_ts <- ts(BR_complete$Rainfall, 
+                     start = c(f_year,f_month), 
+                     frequency = 12)
+
+BR_temperature_ts <- ts(BR_complete$Temperature_C, 
+                        start = c(f_year,f_month), 
+                        frequency = 12)
 
 
 ```
@@ -122,26 +143,45 @@ The `stl` function decomposes the time series object into its component parts. W
 
 # Exercise 8: Use the stl() function to decompose both series. 
 # Visualize the decomposed series using plot(). What components can you identify?
+BR_rainfall_decomposed <- stl(BR_rainfall_ts, s.window = "periodic")
 
+plot(BR_rainfall_decomposed)
 
+BR_temperature_decomposed <- stl(BR_temperature_ts, s.window = "periodic")
 
-
-
+plot(BR_temperature_decomposed)
 
 # Exercise 9: Use the times series object generated with the stl() to extract the 
 # components of each series and turn them into data frames.
+BR_rainfall_components <- as.data.frame(BR_rainfall_decomposed$time.series[,1:3])
 
+BR_rainfall_components <- mutate(BR_rainfall_components,
+        Observed = BR_complete$Rainfall,     
+        Date = BR_complete$Date)
 
+BR_temperature_components <- as.data.frame(BR_temperature_decomposed$time.series[,1:3])
 
+BR_temperature_components <- mutate(BR_temperature_components,
+                                    Observed = BR_complete$Temperature_C,
+                                    Date = BR_complete$Date)
 
 
 
 # Exercise 10: Visualize how the trend maps onto the data for both series
+ggplot(BR_rainfall_components) +
+  geom_line(aes(y = Observed, x = Date),  size = 0.25) +
+  geom_line(aes(y = trend, x = Date), color = "#c13d75ff") +
+  geom_line(aes(y = seasonal, x = Date), color = "blue")+
+  geom_line(aes(y = remainder, x = Date), color = "green")+
+  geom_hline(yintercept = 0, lty = 2) 
 
-
-
-
-
+ 
+ggplot(BR_temperature_components) +
+  geom_line(aes(y = Observed, x = Date),  size = 0.25) +
+  geom_line(aes(y = trend, x = Date), color = "#c13d75ff") +
+  geom_line(aes(y = seasonal, x = Date), color = "blue")+
+  geom_line(aes(y = remainder, x = Date), color = "green")+
+  geom_hline(yintercept = 0, lty = 2) 
 
 ```
 
