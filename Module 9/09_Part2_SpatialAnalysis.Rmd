@@ -116,16 +116,16 @@ mapView(counties_sf)
 
 ```{r read HUCs shapefile}
 #Read the shapefile into an sf dataframe named "huc8_sf"
-huc8_sf <- 
+huc8_sf <- st_read(here("Data/Spatial/NCHUC8.shp"))
 
 #Reveal the column names
-
+colnames(huc8_sf)
 
 #Check the CRS
-
+st_crs(huc8_sf)$epsg
 
 #View the data as a map, colored by the acreage in each
-
+mapview(huc8_sf, zcol = "ACRES")
 
 ```
 
@@ -136,9 +136,12 @@ huc8_sf <-
 
 ```{r Select the Upper Neuse HUC 8}
 #Read the shapefile into an sf dataframe
-
+huc8_filter <- filter(huc8_sf, SUBBASIN == "Upper Neuse")
 
 #Create a map
+ggplot()+
+  geom_sf(data = huc8_sf, fill = 'lightgrey', color = 'grey') +
+  geom_sf(data = huc8_filter, fill = 'yellow', color = 'blue')
 
 
 ```
@@ -217,13 +220,27 @@ ggplot() +
 
 ```{r}
 #Import data, setting HUC_12 to be factors, and computing a HUC_8 column
+enviroatlas <- read.csv(
+  'https://raw.githubusercontent.com/ENV859/EnviroAtlasData/main/Wind_Energy.csv',
+  colClasses = c('HUC_12' = 'factor'))%>%
+  mutate(HUC_8 = substr(HUC_12, 1, 8))%>%
+  group_by(HUC_8)%>%
+  summarise(sum_avg_wind = sum(AvgWindEnergy))
 
   
 #Join to HUC_8 features
-
+wind_sf_join <- huc8_sf %>% 
+  left_join(
+    enviroatlas, 
+    by = c("HUC_8" = "HUC_8") 
+    )%>%
+  na.omit()
 
 #View the outputs
-
+ggplot() + 
+  geom_sf(data = wind_sf_join, aes(fill = sum_avg_wind))+
+  labs(fill = "MW/Year")+
+  labs(title = "Wind Energy by HUC 8")
 
 ```
 
@@ -247,14 +264,17 @@ mapview(state_sf)
 
 ```{r Aggregate the HUC data on an attribute, saving as huc2_sf}
 #List the unique values in the DWQ_Basin field
-
+unique(huc8_sf$DWQ_Basin)
 
 #Summarize on DWQ Basin value
-huc2_sf <- 
+huc2_sf <- huc8_sf %>%
+  group_by(DWQ_Basin) %>%
+  summarise(ACRES = sum(ACRES))
   
 
 #Map the data
-
+ggplot()+
+  geom_sf(data = huc2_sf, aes(fill = ACRES))
 
 ```
 
@@ -334,14 +354,24 @@ mapview(neuse_counties_sf, zcol='Area_m2')
 #Select the Triangle County from the 
 triCo <- counties_sf_utm %>% 
   filter(NAME %in% c("Durham","Wake", "Orange", "Chatham")) 
-
+myMap2 = mapview(triCo, 
+                col.regions = 'yellow', 
+                alpha.regions = 0.2,
+                map.types = "CartoDB.Positron",
+                legend = FALSE)
   
 #Grab the intersecting HUC_8s
-
-
+triCo_intersect <- huc8_sf_utm %>%  
+  st_filter(triCo, .predicate = st_intersects)
+myMap2 + mapview(triCo_intersect, alpha.regions = 0)
 
 #Intersect the HUC_8s
-
+triCo_huc8_sf <- triCo %>% st_intersection(huc8_sf_utm)
+myMap2 + mapview(triCo_huc8_sf, alpha.regions = 0)
+triCo_huc8_sf <- triCo_huc8_sf %>% 
+  mutate(Area_m2 = as.numeric(st_area(triCo_huc8_sf$geometry)))
+  
+mapview(triCo_huc8_sf, zcol='Area_m2')
 
 ```
 

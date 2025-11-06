@@ -250,6 +250,7 @@ concentrations have been decreasing over time at Garinger High School
 ```{r, warning=F, message=F}
 #15
 ozone.monthly.components <- as.data.frame(GaringerOzone.monthly.decompose$time.series[,1:3])
+
 ozone.monthly.components <- mutate(ozone.monthly.components,
         Observed = GaringerOzone.monthly$mean.value,     
         Date = GaringerOzone.monthly$month.year)
