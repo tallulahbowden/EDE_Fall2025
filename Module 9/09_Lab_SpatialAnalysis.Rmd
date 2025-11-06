@@ -103,10 +103,15 @@ This a link to a spatial dataset in GeoJSON format. Let's read this dataset in a
 Well do this one together...
 ```{r read in powerplant data}
 #Create the data source url
-data_source <- 
+data_source <- paste0('https://services.arcgis.com/QVENGdaPbd4LUkLV/',
+                      'arcgis/rest/services/survey123_3d7e213f47a94f1b829aa7',
+                      'cf54eab095_results/FeatureServer/0/query?outFields=*',
+                      '&where=1%3D1&f=geojson')
 
 #Read in to a spatial dataframe
-sea_turtles <- 
+sea_turtles <- st_read(data_source)
+
+mapview(sea_turtles)
 
 ```
 
@@ -116,7 +121,7 @@ sea_turtles <-
 turtle_map <- leaflet(sea_turtles) %>% 
   addTiles() %>% 
   addMarkers(
-    #clusterOptions = markerClusterOptions(),
+    clusterOptions = markerClusterOptions(),
     popup = ~species
   )
 

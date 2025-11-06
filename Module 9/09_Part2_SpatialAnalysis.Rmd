@@ -452,7 +452,14 @@ mapView(counties_sf[resultMask,])
 > Questions: how might we use the `st_buffer` function to show all counties within 30km of the site?
 
 ```{r Select counties within a 30 km area from the site}
+the_site_counties <- theSite_sfc_transformed %>% 
+  st_buffer(.,dist=30000)
+resultMask <- st_intersects(counties_sf_utm,
+                            the_site_counties,
+                            sparse = F)
+selCounties2 <- counties_sf_utm[resultMask,]
 
+mapview(selCounties2) + mapview(the_site_counties)
                             
 ```
 
