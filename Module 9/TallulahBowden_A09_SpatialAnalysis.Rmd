@@ -1,7 +1,7 @@
 ---
 title: "Assignment 9: Spatial Analysis in R"
 author: "Tallulah Bowden"
-output: html_document
+output: pdf_document
 editor_options: 
   chunk_output_type: console
 ---
@@ -28,10 +28,16 @@ This exercise accompanies the lessons in Environmental Data Analytics (ENV872L) 
 
 ```{r Prepare workspace, error=F, warning=F}
 #1. 
-
+library(tidyverse)
+library(sf)
+library(leaflet)
+library(here)
+library(mapview)
+library(viridis)
 
 #2. 
-
+getwd()
+here()
 
 ```
 
@@ -45,20 +51,26 @@ In this exercise, we will be exploring stream gage height data in Nebraska corre
 5.    Plot the records as a map (using `mapview` or `ggplot`)
 
 ```{r Read the county data into an sf dataframe}
-#3. Read in Counties shapefile into an sf dataframe, filtering for just NE counties
-
+#3. Read in Counties shapefile into an sf dataframe, 
+#filtering for just NE counties
+counties_sf <- st_read(here("Data/Spatial/cb_2018_us_county_20m.shp")) %>%
+  filter(STATEFP == 31)
 
 #4. Reveal the CRS of the counties features
-
+st_crs(counties_sf)
+st_crs(counties_sf)$epsg
 
 #5. Plot the data
-
+ggplot()+
+  geom_sf(data = counties_sf)
 
 ```
 
 6.    What is the EPSG code of the Counties dataset? Is this a geographic or a projected coordinate reference system? (In other words, does this CRS use angular or planar coordinate units?) To what datum is this CRS associated? (Tip: lookup the EPSG code on <https://epsg.io> or <https://spatialreference.org>)
 
-> ANSWER: 
+> ANSWER: The EPSG code of the Counties dataset is 4269. This is a geographic 
+coordinate reference system. It uses angular coordinate units and is associated
+with the North American Datum 1983.
 > 
 
 
@@ -72,16 +84,20 @@ Next we'll read in some USGS/NWIS gage location data added to the `Data/Raw` fol
 
 ```{r Read in USGS Gage Locations}
 #7. Read in gage locations csv as a dataframe
-
+gages  <- read.csv(
+  file = here("Data/Raw/NWIS_SiteInfo_NE_RAW.csv"),
+  colClasses = c("site_no" = "factor"),
+  stringsAsFactors = T) 
 
 
 #8. Display the structure of the dataframe
-
+str(gages)
 
 ```
 
 9.    What columns in the dataset contain the x and y coordinate values, respectively?  
-> ANSWER:
+> ANSWER: The column labeled "dec_long_va" contains x coordinate values. The
+column labeled "dec_lat_va" contains y coordinate values.
 > 
 
 
@@ -94,11 +110,12 @@ Next we'll read in some USGS/NWIS gage location data added to the `Data/Raw` fol
 
 ```{r Convert dataframe to sf dataframe}
 #10. Convert to an sf object
-
+gages_sf <- st_as_sf(gages, coords = c('dec_long_va','dec_lat_va'), 
+                        crs=4269)
 
 
 #11. Display the structure
-
+str(gages_sf)
 
 
 
@@ -106,7 +123,11 @@ Next we'll read in some USGS/NWIS gage location data added to the `Data/Raw` fol
 
 12.   What new field(s) appear in the sf dataframe created? What field(s), if any, disappeared?
 
->ANSWER: 
+>ANSWER: In our new sf dataframe, a new "geometry" column has been created that
+tells us what type of geometry each row is (point, line, or polygon) and also
+contains its geographic location as (x, y) coordinates. The columns labeled
+'dec_long_va' and 'dec_lat_va' have disappeared since those were used to create
+the (x, y) coordinates.
 >
 
 
@@ -119,7 +140,9 @@ Next we'll read in some USGS/NWIS gage location data added to the `Data/Raw` fol
 
 ```{r Plot the spatial features}
 #13. Plot the gage locations atop the county features
-
+ggplot()+
+  geom_sf(data = counties_sf)+
+  geom_sf(data = gages_sf)
 
 ```
 
@@ -139,23 +162,32 @@ Lastly, we want to attach some gage height data to our site locations. I've cons
 
 ```{r Read in gage site data}
 #14. Read the site flow data into a data frame
-
+siteflow <- read.csv(here("Data/Raw/NWIS_SiteFlowData_NE_RAW.csv"),
+                        colClasses = c("site_no" = "factor"),
+                        stringsAsFactors = T)
 
 
 #15. Show the structure of the dataframe 
-
+str(siteflow)
 
 
 #16. Join the flow data to our NWIS gage location spatial dataframe
-
+siteflow_gages_sf_join <-  merge(
+  x = gages_sf,
+  y = siteflow, 
+  by.x = "site_no",
+  by.y = "site_no" 
+  )%>%
+  select(site_no, station_nm.x, site_tp_cd, coord_acy_cd, dec_coord_datum_cd, 
+         date, gage_ht, geometry)
 
 
 #17. Show the column names in the resulting spatial dataframe
-
+colnames(siteflow_gages_sf_join)
 
 
 #18. Show the dimensions of this joined dataset
-
+dim(siteflow_gages_sf_join)
 
 
 ```
@@ -168,7 +200,10 @@ Now we can examine where the flooding appears most acute by visualizing gage hei
 
 ```{r map gage sites}
 #Map the points, sized by gage height
-
+ggplot()+
+  geom_sf(data = counties_sf)+
+  geom_sf(data=siteflow_gages_sf_join, aes(color = gage_ht), alpha = 0.65)+
+  scale_color_viridis_c()
 
 ```
 
@@ -186,11 +221,17 @@ Up next we will do some spatial analysis with our data. To prepare for this, we 
 
 ```{r spatial analysis}
 #20 Transform the counties and gage location datasets to UTM Zone 14
-
+counties_sf_utm <- st_transform(counties_sf, crs = 32614)
+gages_sf_utm <- st_transform(gages_sf, crs = 32614)
+siteflow_gages_sf_utm <- st_transform(siteflow_gages_sf_join, crs = 32614)
 
 
 #21 Plot the data
-
+ggplot()+
+  geom_sf(data = counties_sf, color = "red")+
+  #geom_sf(data = counties_sf_utm, color = "black")+
+  geom_sf(data = gages_sf, color = "purple")+
+  geom_sf(data= gages_sf_utm, color = "orange")
 
 
 ```
@@ -211,15 +252,26 @@ Now let's zoom into a particular county and examine the gages located there.
 
 ```{r spatial selection}
 #22 Select Washington county to a new spatial dataframe
-
+washington_county <- filter(counties_sf_utm, NAME == "Washington")
 
 #23 Spatially select gages within the selected county to a new spatial dataframe
+washington_intersect <- gages_sf_utm %>%  
+  st_filter(washington_county, .predicate = st_intersects)
 
-
-#24 Spatially select gages within 20k of the selected county to a new spatial dataframe
-
+#24 Spatially select gages within 20k of the selected county to a 
+#new spatial dataframe
+buffer_washington <- washington_county %>% 
+  st_buffer(.,dist=20000)
+resultMask <- st_intersects(gages_sf_utm,
+                            buffer_washington,
+                            sparse = F)
+selGages <- gages_sf_utm[resultMask,]
 
 #25 Plot
-
+ggplot()+
+  geom_sf(data = counties_sf_utm, color = "grey", fill = "white")+
+  geom_sf(data = washington_county, color = "black", fill = "yellow")+
+  geom_sf(data = selGages, color = "black")+
+  geom_sf(data = washington_intersect, color = "red")
 
 ```
