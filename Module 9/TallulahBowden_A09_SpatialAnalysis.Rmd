@@ -26,7 +26,7 @@ This exercise accompanies the lessons in Environmental Data Analytics (ENV872L) 
 1.    Import libraries: tidyverse, sf, leaflet, here, and mapview
 2.    Execute the `here()` command to display the current project directory
 
-```{r Prepare workspace, error=F, warning=F}
+```{r Prepare workspace, error=F, warning=F, message=F}
 #1. 
 library(tidyverse)
 library(sf)
@@ -50,7 +50,7 @@ In this exercise, we will be exploring stream gage height data in Nebraska corre
 4.    Reveal the dataset's coordinate reference system
 5.    Plot the records as a map (using `mapview` or `ggplot`)
 
-```{r Read the county data into an sf dataframe}
+```{r Read the county data into an sf dataframe, warning=F, message=F}
 #3. Read in Counties shapefile into an sf dataframe, 
 #filtering for just NE counties
 counties_sf <- st_read(here("Data/Spatial/cb_2018_us_county_20m.shp")) %>%
@@ -82,7 +82,7 @@ Next we'll read in some USGS/NWIS gage location data added to the `Data/Raw` fol
 
 8.    Display the structure of this dataset.
 
-```{r Read in USGS Gage Locations}
+```{r Read in USGS Gage Locations, warning=F, message=F}
 #7. Read in gage locations csv as a dataframe
 gages  <- read.csv(
   file = here("Data/Raw/NWIS_SiteInfo_NE_RAW.csv"),
@@ -98,7 +98,6 @@ str(gages)
 9.    What columns in the dataset contain the x and y coordinate values, respectively?  
 > ANSWER: The column labeled "dec_long_va" contains x coordinate values. The
 column labeled "dec_lat_va" contains y coordinate values.
-> 
 
 
 ### Convert the dataframe to a spatial features ("sf") dataframe
@@ -108,7 +107,7 @@ column labeled "dec_lat_va" contains y coordinate values.
 
 11. Display the structure of the resulting sf dataframe
 
-```{r Convert dataframe to sf dataframe}
+```{r Convert dataframe to sf dataframe, warning=F, message=F}
 #10. Convert to an sf object
 gages_sf <- st_as_sf(gages, coords = c('dec_long_va','dec_lat_va'), 
                         crs=4269)
@@ -128,7 +127,6 @@ tells us what type of geometry each row is (point, line, or polygon) and also
 contains its geographic location as (x, y) coordinates. The columns labeled
 'dec_long_va' and 'dec_lat_va' have disappeared since those were used to create
 the (x, y) coordinates.
->
 
 
 ### Plot the gage locations on top of the counties
@@ -138,7 +136,7 @@ the (x, y) coordinates.
   *   Title your plot "NWIS Gage Locations in Nebraska"
   *   Subtitle your plot with your name
 
-```{r Plot the spatial features}
+```{r Plot the spatial features, warning=F, message=F}
 #13. Plot the gage locations atop the county features
 ggplot()+
   geom_sf(data = counties_sf)+
@@ -160,7 +158,7 @@ Lastly, we want to attach some gage height data to our site locations. I've cons
 17. Show the column names of this resulting spatial dataframe
 18. Show the dimensions of the resulting joined dataframe
 
-```{r Read in gage site data}
+```{r Read in gage site data, warning=F, message=F}
 #14. Read the site flow data into a data frame
 siteflow <- read.csv(here("Data/Raw/NWIS_SiteFlowData_NE_RAW.csv"),
                         colClasses = c("site_no" = "factor"),
@@ -198,7 +196,7 @@ Now we can examine where the flooding appears most acute by visualizing gage hei
 19.   Plot the gage sites on top of counties (using `mapview`, `ggplot`, or `leaflet`) 
     *   Show the magnitude of gage height by color, shape, other visualization technique.
 
-```{r map gage sites}
+```{r map gage sites, warning=F, message=F}
 #Map the points, sized by gage height
 ggplot()+
   geom_sf(data = counties_sf)+
@@ -219,7 +217,7 @@ Up next we will do some spatial analysis with our data. To prepare for this, we 
 20. Transform the counties and gage sf datasets to UTM Zone 14N (EPGS = 32614).
 21. Using `ggplot`, plot the data so that each can be seen as different colors.
 
-```{r spatial analysis}
+```{r spatial analysis, warning=F, message=F}
 #20 Transform the counties and gage location datasets to UTM Zone 14
 counties_sf_utm <- st_transform(counties_sf, crs = 32614)
 gages_sf_utm <- st_transform(gages_sf, crs = 32614)
@@ -228,9 +226,7 @@ siteflow_gages_sf_utm <- st_transform(siteflow_gages_sf_join, crs = 32614)
 
 #21 Plot the data
 ggplot()+
-  geom_sf(data = counties_sf, color = "red")+
-  #geom_sf(data = counties_sf_utm, color = "black")+
-  geom_sf(data = gages_sf, color = "purple")+
+  geom_sf(data = counties_sf_utm, color = "black")+
   geom_sf(data= gages_sf_utm, color = "orange")
 
 
@@ -250,7 +246,7 @@ Now let's zoom into a particular county and examine the gages located there.
  * and the gage sites within 20 km of the county
 
 
-```{r spatial selection}
+```{r spatial selection, warning=F, message=F}
 #22 Select Washington county to a new spatial dataframe
 washington_county <- filter(counties_sf_utm, NAME == "Washington")
 
@@ -271,7 +267,7 @@ selGages <- gages_sf_utm[resultMask,]
 ggplot()+
   geom_sf(data = counties_sf_utm, color = "grey", fill = "white")+
   geom_sf(data = washington_county, color = "black", fill = "yellow")+
-  geom_sf(data = selGages, color = "black")+
+  geom_sf(data = selGages, color = "black", alpha = 0.65)+
   geom_sf(data = washington_intersect, color = "red")
 
 ```
