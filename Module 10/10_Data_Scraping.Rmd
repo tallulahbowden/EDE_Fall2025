@@ -97,6 +97,11 @@ the_registrant <- webpage %>%
   html_nodes(".table tr:nth-child(1) td:nth-child(2)") %>% 
   html_text()
 the_registrant
+
+the_facility_name <- webpage %>%
+  html_nodes("tr:nth-child(2) th+ .left:nth-child(2)") %>%
+  html_text()
+the_facility_name
 ```
 
 EXERCISE:
@@ -106,10 +111,6 @@ In the code chunk below, see if you can extract the Facility Name and Facility T
  -  "tr:nth-child(2) .left~ .left+ td.left"
 
 ```{r scraping.exercise.1}
-the_facility_name <- webpage %>% 
-  html_nodes() %>% 
-  html_text()
-the_facility_name
 
 the_facility_type <- webpage  
   
