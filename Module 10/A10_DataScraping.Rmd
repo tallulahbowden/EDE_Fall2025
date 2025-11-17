@@ -1,6 +1,6 @@
 ---
 title: "Assignment 10: Data Scraping"
-author: "Student Name"
+author: "Tallulah Bowden"
 output: pdf_document
 editor_options: 
   chunk_output_type: console

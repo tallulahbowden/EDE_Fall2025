@@ -110,7 +110,31 @@ ggplot(gage_data,aes(x=datetime,y=discharge_cfs)) +
 > Alter the above code so that it plots the last *24* days of flow for gage *02085070*
 
 ```{r EXERCISE - pull.and.plot.other.discharge.data}
+theURL <- 
+  'https://waterdata.usgs.gov/nwis/uv?search_site_no=02085070&period=24&format=rdb'
 
+#Get the data, which starts on line 27
+gage_data <- read.table(
+  theURL,
+  skip = 26, #Skip non-data lines
+  header=TRUE,
+  sep='\t',
+  stringsAsFactors = T) 
+
+#Update the column headers
+colnames(gage_data) = c(
+  "agency_cd", "site_no", "datetime", "tz_cd",
+  "discharge_cfs", "89192_00060_cd", "gage_ht_ft", "89193_00065_cd")
+
+#Tidy the data
+gage_data <- gage_data %>% 
+  select(datetime, discharge_cfs, gage_ht_ft) %>% 
+  mutate(datetime = ymd_hm(datetime))
+
+#Plot
+ggplot(gage_data,aes(x=datetime,y=discharge_cfs)) + 
+  geom_line() +
+  labs(x = "Date",y = "Discharge (cfs)")
 ```
 
 
@@ -212,16 +236,35 @@ The RVest scraping workflow is as follows:
 
 ```{r EXERCISE - scrape.data.manually eval=FALSE}
 #1 Link to the web site using read_html
-the_website <- 
+the_website <- read_html("https://www.eia.gov/electricity/state/")
 
 #2&3 Locate elements and read their text attributes into variables
-the_states <- 
-the_price <- 
-the_capacity <- 
-net_generation <- 
-total_retail <- 
+the_states <- the_website %>% 
+  html_nodes("td:nth-child(1)") %>% 
+  html_text()
+
+the_price <- the_website %>% 
+  html_nodes("td:nth-child(2)") %>% 
+  html_text()
+
+the_capacity <- the_website %>% 
+  html_nodes("td:nth-child(3)") %>% 
+  html_text()
+
+net_generation <- the_website %>% 
+  html_nodes("td:nth-child(4)") %>% 
+  html_text()
+
+total_retail <- the_website %>% 
+  html_nodes("td:nth-child(5)") %>% 
+  html_text()
   
 #3 Construct a dataframe from the values
+df_energy <- data.frame("Name" = as.factor(the_states),
+                        "Average Retail Price" = as.numeric(the_price),
+                        "Net Summer Capacity" = as.numeric(gsub(',','',the_capacity)),
+                        "Net Generation" = as.numeric(gsub(',','',net_generation)),
+                        "Total Retail Sales" = as.numeric(gsub(',','',total_retail)))
 
 ```
 
