@@ -25,9 +25,16 @@ This exercise accompanies the lessons in Environmental Data Analytics on data sc
 * Load the packages `tidyverse`, `rvest`, and any others you end up using.
 * Check your working directory
 
-```{r 1. Project Setup, message = FALSE}
+```{r 1. Project Setup, message = FALSE, warning=F}
 #1 
+library(tidyverse)
+library(here)
+library(rvest)
+library(lubridate)
+library(viridis)
 
+getwd()
+here()
 
 ```
 
@@ -38,8 +45,9 @@ This exercise accompanies the lessons in Environmental Data Analytics on data sc
  
 Indicate this website as the as the URL to be scraped. (In other words, read the contents into an `rvest` webpage object.)
 
-```{r set.the.scraping.website}
+```{r set.the.scraping.website, message=F, warning=F}
 #2 
+website <- read_html("https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=03-32-010&year=2024")
 
 ```
 
@@ -57,9 +65,23 @@ In the code chunk below scrape these values, assigning them to four separate var
 
 >HINT: The first value should be "Durham", the second "03-32-010", the third "Municipality", and the last should be a vector of 12 numeric values (represented as strings)".
 
-```{r scrape.the.data}
+```{r scrape.the.data, message=F, warning=F}
 #3 
+system_name <- website %>% 
+  html_nodes("div+ table tr:nth-child(1) td:nth-child(2)") %>% 
+  html_text()
 
+PWSID <- website %>%
+  html_nodes("td tr:nth-child(1) td:nth-child(5)") %>%
+  html_text()
+
+ownership <- website %>%
+  html_nodes("div+ table tr:nth-child(2) td:nth-child(4)") %>%
+  html_text()
+
+max_day_use <- website %>%
+  html_nodes("th~ td+ td") %>%
+  html_text()
 
 ```
 
@@ -72,12 +94,31 @@ In the code chunk below scrape these values, assigning them to four separate var
 
 5. Create a line plot of the maximum daily withdrawals across the months for 2024, making sure, the months are presented in proper sequence.
 
-```{r create.a.dataframe.from.scraped.data}
+```{r create.a.dataframe.from.scraped.data, warning=F, message=F}
 #4 
+month <- c("Jan", "May", "Sept", 
+                                   "Feb", "Jun", "Oct",
+                                   "Mar", "Jul", "Nov",
+                                   "Apr", "Aug", "Dec")
+year <- 2024
+
+df_water <- data.frame("System Name" = rep(as.factor(system_name)),
+                        "PWSID" = rep(as.factor(PWSID)),
+                        "Ownership" = rep(as.factor(ownership)),
+                        "Maximum Day Use (MGD)" = as.numeric(max_day_use),
+                       "Month" = month,
+                       "Year" = rep(year),
+                       "Date" = my(paste(month,"-",year)))
+                       
+
 
 
 #5 
-
+ggplot(df_water,aes(x=Date,y=Maximum.Day.Use..MGD.)) + 
+  geom_line() + 
+  labs(title = paste("2024 Maximum Day Use (MGD) for",df_water$System.Name),
+       y="Maximum Day Use (MGD)",
+       x="Date")
 
 ```
 
@@ -88,25 +129,71 @@ In the code chunk below scrape these values, assigning them to four separate var
   - Returns the dataframe as the function's output
 
 
-```{r construct.a.scraping.function}
+```{r construct.a.scraping.function, message=F, warning=F}
 #6. 
+scrape.it <- function(PWSID, year){
+  
+the_website <- read_html(paste0('https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=', PWSID, '&year=', year))
+  
 
+system_name <- the_website %>% 
+  html_nodes("div+ table tr:nth-child(1) td:nth-child(2)") %>% 
+  html_text()
+
+ownership <- the_website %>%
+  html_nodes("div+ table tr:nth-child(2) td:nth-child(4)") %>%
+  html_text()
+
+max_day_use <- the_website %>%
+  html_nodes("th~ td+ td") %>%
+  html_text()
+  
+  df_water <- data.frame("System Name" = rep(as.factor(system_name)),
+                        "PWSID" = rep(as.factor(PWSID)),
+                        "Ownership" = rep(as.factor(ownership)),
+                        "Maximum Day Use (MGD)" = as.numeric(max_day_use),
+                       "Month" = c(1,5,9,2,6,10,3,7,11,4,8,12),
+                       "Year" = rep(year),
+                       "Date" = my(paste(month,"-",year))) 
+  
+
+  Sys.sleep(1) 
+  
+  return(df_water)
+}
 
 ```
 
 7. Use the function above to extract and plot max daily withdrawals for Durham (PWSID='03-32-010') for each month in 2020. Then show the structure of the dataframe with either the `str()` or the `glimpse()` function. 
 
-```{r fetch.and.plot.Durham.2020.data}
+```{r fetch.and.plot.Durham.2020.data, warning=F, message=F}
 #7 
+the_df <- scrape.it('03-32-010', 2020)
 
+glimpse(the_df)
+
+ggplot(the_df,aes(x=Date,y=Maximum.Day.Use..MGD.)) + 
+  geom_line() + 
+  labs(title = paste(the_df$Year, "Maximum Day Use (MGD) for",the_df$System.Name),
+       y="Maximum Day Use (MGD)",
+       x="Date")
 
 ```
 
-8. Use the function above to extract data for Cary (PWSID = '03-32-010') in 2020. Combine this data with the Durham data collected above and create a plot that compares Cary's to Durham's water withdrawals.
+8. Use the function above to extract data for Cary (PWSID = '03-92-020') in 2020. Combine this data with the Durham data collected above and create a plot that compares Cary's to Durham's water withdrawals.
 
-```{r fetch.and.plot.Cary.2020.data}
+```{r fetch.and.plot.Cary.2020.data, message=F, warning=F}
 #8 
+the_df2 <- scrape.it('03-92-020', 2020)
 
+the_dfs <- bind_rows(the_df, the_df2)
+
+ggplot(the_dfs,aes(x=Date,y=Maximum.Day.Use..MGD., color=System.Name)) + 
+  geom_line() + 
+  labs(title = paste(the_dfs$Year, "Maximum Day Use (MGD)"),
+       y="Maximum Day Use (MGD)",
+       x="Date",
+       color="System Name")
 
 ```
 
@@ -115,12 +202,25 @@ In the code chunk below scrape these values, assigning them to four separate var
 
 > TIP: See Section 3.2 in the "10_Data_Scraping.Rmd" where we apply "map2()" to iteratively run a function over two inputs. Pipe the output of the map2() function to `bind_rows()` to combine the dataframes into a single one, and use that to construct your plot.
 
-```{r fetch.and.plot.Cary.multiyear.data }
+```{r fetch.and.plot.Cary.multiyear.data, message=F, warning=F}
 #9 
+years <- c(2018,2019,2020,2021,2022,2023)
+cary_years_separate <- map2('03-92-020', years, scrape.it)
+cary_years_combined <- bind_rows(cary_years_separate)
 
+ggplot(cary_years_combined,aes(x=Date,y=Maximum.Day.Use..MGD.)) + 
+  geom_smooth(method = "loess", se=F) + 
+  labs(title = paste("Maximum Day Use (MGD) for", cary_years_combined$System.Name, "Over Time"),
+       y="Maximum Day Use (MGD)",
+       x="Date",
+       color="System Name")
 
 ```
 
 Question: Just by looking at the plot (i.e. not running statistics), does Cary have a trend in water usage over time?
-> Answer:
->
+
+>Answer: Cary does have a trend in water usage over time. Cary is using more
+water over time, with a plateau in water usage from 2020 to 2021. This could
+be the result of the pandemic but further analysis is needed to understand this
+plateau in water usage. There seems to be a leveling in water usage from late
+2022 to 2024. Generally, more water is being used over time.
